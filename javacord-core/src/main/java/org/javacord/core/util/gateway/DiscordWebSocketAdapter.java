@@ -621,7 +621,7 @@ public class DiscordWebSocketAdapter extends WebSocketAdapter {
                                         || !api.isWaitingForUsersOnStartup()
                                         || api.getAllServers().stream()
                                         .map(ServerImpl.class::cast)
-                                        .noneMatch(server -> server.getMemberCount() != server.getRealMembers().size());
+                                        .allMatch(ServerImpl::isReady);
                             }
                             if (sameUnavailableServerCounter > 1000
                                     && lastGuildMembersChunkReceived + 5000 < System.currentTimeMillis()) {

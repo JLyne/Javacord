@@ -28,7 +28,8 @@ public class GuildMembersChunkHandler extends PacketHandler {
         api.getPossiblyUnreadyServerById(packet.get("guild_id").asLong())
                 .map(ServerImpl.class::cast)
                 .ifPresent(server -> {
-                    List<Member> members = server.addAndGetMembers(packet.get("members"));
+                    boolean ready = packet.get("chunk_index").asInt() == (packet.get("chunk_count").asInt() - 1);
+                    List<Member> members = server.addAndGetMembers(packet.get("members"), ready);
                     ServerMembersChunkEventImpl event = new ServerMembersChunkEventImpl(
                             server,
                             members.stream().map(Member::getUser).collect(Collectors.toSet())

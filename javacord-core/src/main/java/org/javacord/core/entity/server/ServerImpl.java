@@ -986,13 +986,6 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
         MemberImpl member = new MemberImpl(api, this, memberJson, null);
         api.addMemberToCacheOrReplaceExisting(member);
 
-        synchronized (readyConsumers) {
-            if (!ready && getRealMembers().size() == getMemberCount()) {
-                ready = true;
-                readyConsumers.forEach(consumer -> consumer.accept(this));
-                readyConsumers.clear();
-            }
-        }
         return member;
     }
 
@@ -1018,14 +1011,24 @@ public class ServerImpl implements Server, Cleanupable, InternalServerAttachable
      * Adds members to the server and returns the added members.
      *
      * @param membersJson An array of guild member objects.
+     * @param ready Whether the server should now be considered ready, as all members have been added.
      * @return The added members.
      */
-    public List<Member> addAndGetMembers(JsonNode membersJson) {
+    public List<Member> addAndGetMembers(JsonNode membersJson, boolean ready) {
         List<Member> members = new ArrayList<>();
         for (JsonNode memberJson : membersJson) {
             Member member = addMember(memberJson);
             members.add(member);
         }
+
+        synchronized (readyConsumers) {
+            if (!this.ready && ready) {
+                this.ready = true;
+                readyConsumers.forEach(consumer -> consumer.accept(this));
+                readyConsumers.clear();
+            }
+        }
+
         return members;
     }
 
