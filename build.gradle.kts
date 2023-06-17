@@ -2,6 +2,10 @@ import org.gradle.api.JavaVersion.VERSION_11
 import org.gradle.api.JavaVersion.VERSION_13
 import org.gradle.api.JavaVersion.VERSION_1_9
 
+if (file("./build.gradle.local").exists()) {
+    apply("./build.gradle.local")
+}
+
 plugins {
     `java-library`
     `maven-publish`
@@ -20,7 +24,7 @@ dependencies {
 }
 
 allprojects {
-    group = "org.javacord"
+    group = "uk.co.notnull"
 
     description = "An easy to use multithreaded library for creating Discord bots in Java"
 
@@ -64,15 +68,6 @@ configure<PublishingExtension> {
                     pom {
                         name.set(rootProject.name.capitalize() + (if (project.parent != null) " (${project.ext.get("shortName")})" else ""))
                         description.set(project.description)
-                        url.set("https://javacord.org")
-                        issueManagement {
-                            system.set("GitHub")
-                            url.set("https://github.com/Javacord/Javacord/issues")
-                        }
-                        ciManagement {
-                            system.set("GitHub Actions")
-                        }
-                        inceptionYear.set("2015")
                         developers {
                             developer {
                                 id.set("Bastian")
@@ -98,29 +93,24 @@ configure<PublishingExtension> {
                                 comments.set("A business-friendly OSS license")
                             }
                         }
-                        scm {
-                            connection.set("scm:git:https://github.com/Javacord/Javacord.git")
-                            developerConnection.set("scm:git:git@github.com:Javacord/Javacord.git")
-                            url.set("https://github.com/Javacord/Javacord")
-                        }
-                        distributionManagement {
-                            downloadUrl.set("https://github.com/Javacord/Javacord/releases")
-                        }
                     }
                 }
             }
 
             repositories {
                 maven {
-                    name = "OSSRH"
-                    url = if (isReleaseVersion) {
-                        uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                    } else {
-                        uri("https://oss.sonatype.org/content/repositories/snapshots/")
-                    }
                     credentials {
-                        username = System.getenv("MAVEN_USERNAME")
-                        password = System.getenv("MAVEN_PASSWORD")
+                        username = rootProject.ext.get("mavenUserName") as String
+                        password = rootProject.ext.get("mavenPassword") as String
+                    }
+
+                    val releasesRepoUrl = uri("https://repo.not-null.co.uk/releases/") // gradle -Prelease publish
+                    val snapshotsRepoUrl = uri("https://repo.not-null.co.uk/snapshots/")
+
+                    if(isReleaseVersion) {
+                         url = releasesRepoUrl
+                    } else {
+                         url = snapshotsRepoUrl
                     }
                 }
             }
